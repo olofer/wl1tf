@@ -1,0 +1,3 @@
+# exportPattern("^[[:alpha:]]+")
+export(wl1tf)
+useDynLib(wl1tf, wl1tf_R)
