@@ -1,5 +1,6 @@
 # wl1tf
-Linear programming l1 trend filtering with R wrapper
+Linear and quadratic programming l1 trend filtering with R wrapper.
+Supports observation weights and boundary conditions.
 
 ## Quick install
 Start R. Load devtools library. Then run:
