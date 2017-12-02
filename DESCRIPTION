@@ -1,9 +1,9 @@
 Package: wl1tf
 Type: Package
-Title: Weighted l1 trend filtering
-Version: 1.0
-Date: 2017-11-20
+Title: Weighted and flexible l1 trend filtering
+Version: 1.1
+Date: 2017-12-02
 Author: K Erik J Olofsson
 Maintainer: Author <k.e.j.olofsson@gmail.com>
-Description: Basic code for linear programming (LP) trend filtering with optional specification of observation weights.
+Description: Basic code for linear and quadratic programming l1 trend filtering with optional specification of observation weights and boundary conditions.
 License: MIT + file LICENSE

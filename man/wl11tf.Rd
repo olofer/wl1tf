@@ -1,8 +1,8 @@
-\name{wl1tf}
-\alias{wl1tf}
+\name{wl11tf}
+\alias{wl11tf}
 \title{Linear programming l1 trend filtering}
 \usage{
-wl1tf(x, lambda, yl=NULL, yr=NULL, w=NULL, eps=1e-6, eta=0.96, maxiters=50, verbose=0)
+wl11tf(x, lambda, yl=NULL, yr=NULL, w=NULL, eps=1e-6, eta=0.96, maxiters=50, verbose=0)
 }
 \arguments{
 \item{x}{Numeric input vector or matrix. If matrix, each column is a signal.}
@@ -26,10 +26,10 @@ Solves the following convex denoising optimization program in time and memory O(
 z <- (1:3000-1)/1000
 z <- z - floor(z)
 x <- 2.0 * z + rnorm(length(z))
-X.none <- wl1tf(x, 100.0, yl=c(), yr=c())
-X.left <- wl1tf(x, 100.0, yl=c(0,0), yr=c())
-X.right <- wl1tf(x, 100.0, yl=c(), yr=c(1,1))
-X.both <- wl1tf(x, 100.0, yl=c(0,0), yr=c(1,1))
+X.none <- wl11tf(x, 100.0, yl=c(), yr=c())
+X.left <- wl11tf(x, 100.0, yl=c(0,0), yr=c())
+X.right <- wl11tf(x, 100.0, yl=c(), yr=c(1,1))
+X.both <- wl11tf(x, 100.0, yl=c(0,0), yr=c(1,1))
 plot(x, col = "black")
 lines(X.none$y, col = "blue", lwd = 4)
 lines(X.left$y, col = "cyan", lwd = 4)

@@ -1,10 +1,10 @@
 /*
   Intended interface:
 
-  rep <- wl1tf(
+  rep <- wl1tf_R(
     x, lambda, yl, yr, w,     # problem data
     eps, eta, maxiters,       # algorithm settings
-    verbose)                  # enable printf's
+    verbose, fit_type)        # enable printf's
 
   Here x can be a vector or a matrix.
   R uses column-major matrix storage.
@@ -41,7 +41,8 @@ SEXP wl1tf_R(
   SEXP sx_eps,
   SEXP sx_eta,
   SEXP sx_maxiters,
-  SEXP sx_verbose)
+  SEXP sx_verbose,
+  SEXP sx_fitting)
 {
   int verbose = 0;
   int initopt = 1;
@@ -54,10 +55,20 @@ SEXP wl1tf_R(
   int nyr = 0;
   double *pyl = NULL;
   double *pyr = NULL;
+  int fitting_norm = -1;
 
   #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
   fclk_timespec _tic1, _toc1;
   #endif
+
+  if (TYPEOF(sx_fitting) != INTSXP || length(sx_fitting) != 1) {
+    error("fitting argument must be scalar integer");
+  }
+
+  fitting_norm = INTEGER(sx_fitting)[0]; 
+  if ( !(fitting_norm == 1 || fitting_norm == 2) ) {
+    error("integer fitting argument must equal either 1 or 2");
+  }
 
   if (TYPEOF(sx_verbose) != INTSXP || length(sx_verbose) != 1) {
     error("verbose argument is misspecified");
