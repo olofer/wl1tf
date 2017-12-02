@@ -29,6 +29,7 @@
 #define __COMPILE_WITH_INTERNAL_TICTOC__
 #undef __SCATTERED_ASSERTIONS__
 
+#include "ell12utils.h"
 #include "ell11.h"
 
 SEXP wl1tf_R(
@@ -271,8 +272,8 @@ SEXP wl1tf_R(
     #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
     fclk_timestamp(&_toc1);
     pclk[kk * 3 + 0] = fclk_delta_timestamps(&_tic1, &_toc1); // total time of call kk
-    pclk[kk * 3 + 1] = __global_clock_0; // time spent on banded Cholesky factorization
-    pclk[kk * 3 + 2] = __global_clock_1; // time spent on solve using the factorization
+    pclk[kk * 3 + 1] = __11_global_clock_0; // time spent on banded Cholesky factorization
+    pclk[kk * 3 + 2] = __11_global_clock_1; // time spent on solve using the factorization
     #endif
 
     pfy[kk] = objy;     /* loss term */

@@ -32,18 +32,6 @@
 #ifndef __ELL11_H__
 #define __ELL11_H__
 
-#ifndef MEMALLOC
-#define MEMALLOC malloc
-#endif
-
-#ifndef MEMFREE
-#define MEMFREE free
-#endif
-
-#ifndef THEPRINTF
-#define THEPRINF printf
-#endif
-
 #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
 #include <time.h>
 #include "fastclock.h"
@@ -300,7 +288,7 @@ int setupEll11ProgramBuffers(
  * where y1 has length 2*n and y2 has length 2*nxi
  * and x1,x2,x3 have lengths n,n,nxi
  */
-static inline void datEmultxplusz(
+static inline void __11_datEmultxplusz(
   const ell11ProgramData *dat,
   double *y, double *x, double *z)
 {
@@ -373,7 +361,7 @@ static inline void datEmultxplusz(
  * y3 <- Exi2'*x2
  *
  */
-static inline void datEtmultx(
+static inline void __11_datEtmultx(
   const ell11ProgramData *dat,
   double *y, double *x)
 {
@@ -440,7 +428,7 @@ static inline void datEtmultx(
  *
  */
 
-int factorizeEtDE(ell11ProgramData *dat, double *d)
+int __11_factorizeEtDE(ell11ProgramData *dat, double *d)
 {
   if (dat==NULL) return -1;
   if (d==NULL) return -2;
@@ -681,7 +669,7 @@ int factorizeEtDE(ell11ProgramData *dat, double *d)
  * from the companion routine above.
  *
  */
-int solveFactorizedEq(ell11ProgramData *dat, double *b) {
+int __11_solveFactorizedEq(ell11ProgramData *dat, double *b) {
 
   /* 1. replace b1: b1 <- b1 - M21'*inv(M22)*b2 - M31'*inv(M33)*b3
    * 2. in-place solve M11p*x1 = b1 (so that b1 <- x1 = solution )
@@ -782,6 +770,8 @@ int solveFactorizedEq(ell11ProgramData *dat, double *b) {
   return 0;
 }
 
+
+#if 0
 /*
  * Basic utility functions needed in main PDIPM loop
  */
@@ -800,13 +790,6 @@ static inline double norminf(double *x, int n) {
   return s;
 }
 
-/*
-F77_NAME(daxpy)(const int *n, const double *alpha,
-    const double *dx, const int *incx,
-    double *dy, const int *incy);
- */
-
-/* daxpy: y <- y + a*x, so a=1.0 or -1.0 for add or sub */
 static inline void blas_addvec(double *y,double *x,int n,double a) {
   /* cblas_daxpy(n, a, x, 1, y, 1); */
   int incx = 1;
@@ -860,10 +843,12 @@ static inline void scmaccxyw(double *z,double x,double *y,double *w,int n) {
   int i; for (i=0;i<n;i++) z[i]=x*y[i]+w[i];
 }
 
+#endif
+
 /* Global variable for additional diagnostics timer (ugly) */
 #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
-static double __global_clock_0 = 0.0;
-static double __global_clock_1 = 0.0;
+static double __11_global_clock_0 = 0.0;
+static double __11_global_clock_1 = 0.0;
 #endif
 
 /*
@@ -893,12 +878,12 @@ int ell11ProgramSolve(
 {
 #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
   fclk_timespec _tic1, _toc1;
-  __global_clock_0 = 0.0;
+  __11_global_clock_0 = 0.0;
   /* the above clock value should contain
    * the total time spent in "factorizeHpEtDE"
    * at exit of this routine
    */
-  __global_clock_1 = 0.0; /* and this one is to time all triangular solves */
+  __11_global_clock_1 = 0.0; /* and this one is to time all triangular solves */
 #endif
 
   /* check for basic misuse */
@@ -1051,10 +1036,10 @@ int ell11ProgramSolve(
   /* Calculate first residual */
       
   /* rL=h+E'*z; note that h is the objective gradient vector */
-  datEtmultx(dat, vrL, vz);
+  __11_datEtmultx(dat, vrL, vz);
   blas_addvec(vrL, h, n, 1.0);
   /* rs=s+E*x-f; */
-  datEmultxplusz(dat, vrs, vx, vs);
+  __11_datEmultxplusz(dat, vrs, vx, vs);
   blas_addvec(vrs, f, q, -1.0);
   /* rsz=s.*z; */
   ewprodxy(vrsz, vs, vz, q);
@@ -1071,26 +1056,26 @@ int ell11ProgramSolve(
 #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
     fclk_timestamp(&_tic1);
 #endif
-    cholretval = factorizeEtDE(dat, vtmp2);
+    cholretval = __11_factorizeEtDE(dat, vtmp2);
 #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
     fclk_timestamp(&_toc1);
-    __global_clock_0 += fclk_delta_timestamps(&_tic1, &_toc1);
+    __11_global_clock_0 += fclk_delta_timestamps(&_tic1, &_toc1);
 #endif
     if (cholretval!=0) break;
     ewmaccnxyw(vtmp4, vtmp2, vrs, vz, q); /* vtmp4=-vtmp2.*vrs+vz */
-    datEtmultx(dat, vdx, vtmp4);
+    __11_datEtmultx(dat, vdx, vtmp4);
     blas_addvec(vdx, vrL, n, -1.0); /* vdx = E'*vtmp4 - vrL */
     /* Backsubstitution #1 using factorization above; store in vdx, rhs in vdx also */
 #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
     fclk_timestamp(&_tic1);
 #endif
-    solvretval = solveFactorizedEq(dat, vdx);
+    solvretval = __11_solveFactorizedEq(dat, vdx);
 #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
     fclk_timestamp(&_toc1);
-    __global_clock_1 += fclk_delta_timestamps(&_tic1, &_toc1);
+    __11_global_clock_1 += fclk_delta_timestamps(&_tic1, &_toc1);
 #endif
     if (solvretval!=0) break;
-    datEmultxplusz(dat, vds, vdx, vrs);
+    __11_datEmultxplusz(dat, vds, vdx, vrs);
     flipsign(vds, q);  /* vds=-(E*vdx+vrs); */ 
     ewmaccxyw(vdz, vtmp2, vds, vz, q);
     flipsign(vdz, q); /* vdz=-(z+vtmp2.*vds); */
@@ -1105,19 +1090,19 @@ int ell11ProgramSolve(
     scmaccxyw(vrsz, -sigma*mu, ve, vrsz, q); /* vrsz=vrsz+ds.*dz-sigma*mu*ve; */
     ewdivxy(vtmp4, vrsz, vs, q);
     ewmaccnxyw(vtmp4, vtmp2, vrs, vtmp4, q); /* vtmp4=vrsz./vs-vtmp2.*vrs; */
-    datEtmultx(dat, vdx, vtmp4);
+    __11_datEtmultx(dat, vdx, vtmp4);
     blas_addvec(vdx, vrL, n, -1.0); /* vdx = E'*vtmp4 - vrL */
     /* Backsubstitution #2 */
 #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
     fclk_timestamp(&_tic1);
 #endif
-    solvretval = solveFactorizedEq(dat, vdx);
+    solvretval = __11_solveFactorizedEq(dat, vdx);
 #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
     fclk_timestamp(&_toc1);
-    __global_clock_1 += fclk_delta_timestamps(&_tic1, &_toc1);
+    __11_global_clock_1 += fclk_delta_timestamps(&_tic1, &_toc1);
 #endif
     if (solvretval!=0) break;
-    datEmultxplusz(dat, vds, vdx, vrs);
+    __11_datEmultxplusz(dat, vds, vdx, vrs);
     flipsign(vds, q);  /* vds=-(E*vdx+vrs); */ 
     ewdivxy(vtmp4, vrsz, vs, q);
     ewmaccxyw(vdz, vtmp2, vds, vtmp4, q);
@@ -1131,9 +1116,9 @@ int ell11ProgramSolve(
     blas_addvec(vz, vdz, q, xia);
     blas_addvec(vs, vds, q, xia);
     /* Recalculate residuals */
-    datEtmultx(dat, vrL, vz);
+    __11_datEtmultx(dat, vrL, vz);
     blas_addvec(vrL, h, n, 1.0);  /* rL=h+E'*z; */
-    datEmultxplusz(dat, vrs, vx, vs);
+    __11_datEmultxplusz(dat, vrs, vx, vs);
     blas_addvec(vrs, f, q, -1.0); /* rs=s+E*x-f; */
     ewprodxy(vrsz, vs, vz, q);
     mu = vecmean(vrsz, q); /* rsz=s.*z; mu = sum(rsz)/q; */
@@ -1315,14 +1300,14 @@ int randomFactorizeSolveTest(
   
   for (ff=0;ff<numf;ff++){
     make_runif(d, nq, 0.5, 1.5);
-    info = factorizeEtDE(dat, d);
+    info = __11_factorizeEtDE(dat, d);
     if (info==0) {
       for (bb=0;bb<rhsperf;bb++) {
         /* random rhs; then solve, then check residual */
         make_runif(x1, nx, -1.0, 1.0);
         memcpy(x2, x1, sizeof(double)*nx);
         /* RHS x1 -> solution x1 (in-place) */
-        info = solveFactorizedEq(dat, x1);
+        info = __11_solveFactorizedEq(dat, x1);
         if (info==0) {
           AugmentedMultTest(dat, x1, er); /* er <- M*x1 */
           THEPRINTF("[%s]: max-abs-diff (%i:%i) = %e\n", __func__, ff, bb, maxInfDiff(er, x2, nx));
