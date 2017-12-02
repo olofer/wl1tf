@@ -31,6 +31,7 @@
 
 #include "ell12utils.h"
 #include "ell11.h"
+#include "ell21.h"
 
 SEXP wl1tf_R(
   SEXP x,
@@ -44,11 +45,11 @@ SEXP wl1tf_R(
   SEXP sx_verbose,
   SEXP sx_fitting)
 {
+  static ell11ProgramData dat11;
+  static ell21ProgramData dat21;
+
   int verbose = 0;
   int initopt = 1;
-  int maxiters = __ELL11_DEFAULT_MAXITERS;
-  double eta = __ELL11_DEFAULT_ETA;
-  double eps = __ELL11_DEFAULT_EPS;
   int nw = 0;
   double *weights = NULL;
   int nyl = 0;
@@ -69,6 +70,12 @@ SEXP wl1tf_R(
   if ( !(fitting_norm == 1 || fitting_norm == 2) ) {
     error("integer fitting argument must equal either 1 or 2");
   }
+
+  int maxiters = (fitting_norm == 1 ? __ELL11_DEFAULT_MAXITERS : __ELL21_DEFAULT_MAXITERS);
+  double eta   = (fitting_norm == 1 ? __ELL11_DEFAULT_ETA : __ELL21_DEFAULT_ETA);
+  double eps   = (fitting_norm == 1 ? __ELL11_DEFAULT_EPS : __ELL21_DEFAULT_EPS);
+  int limiters = (fitting_norm == 1 ? __ELL11_MAXIMUM_ITERATIONS : __ELL21_MAXIMUM_ITERATIONS);
+  int limsampl = (fitting_norm == 1 ? __ELL11_MINIMUM_SAMPLES : __ELL21_MINIMUM_SAMPLES);
 
   if (TYPEOF(sx_verbose) != INTSXP || length(sx_verbose) != 1) {
     error("verbose argument is misspecified");
@@ -98,8 +105,8 @@ SEXP wl1tf_R(
     error("dimension and length of x are inconsistent");
   }
 
-  if (r < __ELL11_MINIMUM_SAMPLES) {
-    error("signal is shorter than minimum allowed = %i", __ELL11_MINIMUM_SAMPLES);
+  if (r < limsampl) {
+    error("signal is shorter than minimum allowed = %i", limsampl);
   }
 
   /* Conclude the signal length = # rows (r) and the number of signals = # columns (c) */
@@ -189,7 +196,7 @@ SEXP wl1tf_R(
     error("maxiters argument is misspecified");
   }
 
-  if (INTEGER(sx_maxiters)[0] >= 1 && INTEGER(sx_maxiters)[0] <= __ELL11_MAXIMUM_ITERATIONS) {
+  if (INTEGER(sx_maxiters)[0] >= 1 && INTEGER(sx_maxiters)[0] <= limiters) {
     maxiters = INTEGER(sx_maxiters)[0];
   } else {
     warning("provided maxiters was ignored (out of bounds)");
@@ -200,16 +207,23 @@ SEXP wl1tf_R(
     THEPRINTF("[%s]: will use eps=%e, eta=%f, and maxiters=%i\n", __func__, eps, eta, maxiters);
   }
 
-  ell11ProgramData dat11;
-  int retcode = setupEll11ProgramBuffers(&dat11, r, nyl, nyr, verbose);
+  int retcode = -1;
+
+  if (fitting_norm == 1) {
+    retcode = setupEll11ProgramBuffers(&dat11, r, nyl, nyr, verbose);
+  } else {
+    retcode = setupEll21ProgramBuffers(&dat21, r, nyl, nyr, verbose);
+  }
 
   if (retcode != 0) {
-    error("Failed to initialize ell11 data buffers (retcode = %i)", retcode);
+    error("Failed to initialize data buffers (retcode = %i, fit = %i)", retcode, fitting_norm);
   }
 
   #ifdef __INCLUDE_BANDED_CHOLESKY_TEST__
-  /* Run test suite: 10 factorizations; 2 RHSs for each eq. */
-  randomFactorizeSolveTest(&dat11, 10, 2);
+  if (fitting_norm == 1) {
+    /* Run test suite: 10 factorizations; 2 RHSs for each eq. */
+    randomFactorizeSolveTest(&dat11, 10, 2);
+  }
   #endif
 
   double *px = REAL(x);
@@ -259,32 +273,60 @@ SEXP wl1tf_R(
     #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
     fclk_timestamp(&_tic1);
     #endif
-  
-    retcode = ell11ProgramSolve(
-      &dat11,
-      &(px[kk * r]),
-      lambda_kk,
-      wkk,           /* NOTE: if NULL, default unity weights are used */
-      pyl,
-      pyr,
-      eta,
-      eps,
-      maxiters,
-      initopt,
-      &(py[kk * r]), /* y */
-      &objy,         /* fy */
-      NULL,          /* ignore return of xi vector */
-      &objxi,        /* fxi */
-      &iters,
-      &cholerr,
-      &(pinf[kk * 3])
-      );
+
+    if (fitting_norm == 1) {
+      retcode = ell11ProgramSolve(
+        &dat11,
+        &(px[kk * r]),
+        lambda_kk,
+        wkk,           /* NOTE: if NULL, default unity weights are used */
+        pyl,
+        pyr,
+        eta,
+        eps,
+        maxiters,
+        initopt,
+        &(py[kk * r]), /* y */
+        &objy,         /* fy */
+        NULL,          /* ignore return of xi vector */
+        &objxi,        /* fxi */
+        &iters,
+        &cholerr,
+        &(pinf[kk * 3])
+        );
+    } else {
+      retcode = ell21ProgramSolve(
+        &dat21,
+        &(px[kk * r]),
+        lambda_kk,
+        (wkk == NULL ? dat21.w : wkk), // Need to manually handle the NULL case for this solver
+        pyl,
+        pyr,
+        eta,
+        eps,
+        maxiters,
+        initopt,
+        &(py[kk * r]),
+        &objy,
+        NULL,
+        &objxi, // fxi
+        NULL,   // f0
+        &iters,
+        &cholerr,
+        &(pinf[kk * 3])
+        );
+    }
       
     #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
     fclk_timestamp(&_toc1);
     pclk[kk * 3 + 0] = fclk_delta_timestamps(&_tic1, &_toc1); // total time of call kk
-    pclk[kk * 3 + 1] = __11_global_clock_0; // time spent on banded Cholesky factorization
-    pclk[kk * 3 + 2] = __11_global_clock_1; // time spent on solve using the factorization
+    if (fitting_norm == 1) {
+      pclk[kk * 3 + 1] = __11_global_clock_0; // time spent on banded Cholesky factorization
+      pclk[kk * 3 + 2] = __11_global_clock_1; // time spent on solve using the factorization
+    } else {
+      pclk[kk * 3 + 1] = 0.0; // TODO: implement
+      pclk[kk * 3 + 2] = 0.0;
+    }
     #endif
 
     pfy[kk] = objy;     /* loss term */
@@ -300,7 +342,11 @@ SEXP wl1tf_R(
     kk++;
   }
 
-  releaseEll11ProgramBuffers(&dat11, verbose);
+  if (fitting_norm == 1) {
+    releaseEll11ProgramBuffers(&dat11, verbose);
+  } else {
+    releaseEll21ProgramBuffers(&dat21, verbose);
+  }
 
   #ifdef __COMPILE_WITH_INTERNAL_TICTOC__
   int list_elems = 8;

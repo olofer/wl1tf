@@ -1,5 +1,5 @@
 \name{wl1tf-package}
-\alias{wl1tf-package}
+\alias{wl1tf}
 \docType{package}
 \title{
 \packageTitle{wl1tf}
