@@ -851,6 +851,9 @@ static double __11_global_clock_0 = 0.0;
 static double __11_global_clock_1 = 0.0;
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
 /*
  * Solve a new instance of the problem given data xsig and (if applicable boundary terms yl,yr).
  * Observation weights are specified by w (dat->w are default unity weights).
@@ -1161,6 +1164,8 @@ int ell11ProgramSolve(
   
   return (oktostop ? 1 : 0);
 }
+
+#pragma GCC diagnostic pop
 
 #ifdef __INCLUDE_BANDED_CHOLESKY_TEST__
 

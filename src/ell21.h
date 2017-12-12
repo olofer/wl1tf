@@ -446,6 +446,9 @@ static inline void __21_datEtmultx(
   }
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
 /* 
  * Main linear equation factorization step.
  *
@@ -614,6 +617,8 @@ int __21_factorizeHpEtDE(ell21ProgramData *dat, double *d)
   return info;
 }
 
+#pragma GCC diagnostic pop
+
 /* 
  * Solve the block equation for a new RHS b (n+nxi)-vector.
  *
@@ -700,6 +705,9 @@ int __21_solveFactorizedEq(const ell21ProgramData *dat, double *b) {
 
   return 0;
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
 /*
  * Solve a new instance of the problem given data xsig and (if applicable boundary terms yl,yr).
@@ -972,6 +980,8 @@ int ell21ProgramSolve(
   
   return (oktostop ? 1 : 0);
 }
+
+#pragma GCC diagnostic pop
 
 #endif
 
