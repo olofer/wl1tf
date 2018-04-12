@@ -1,9 +1,9 @@
 # wl1tf
-Linear and quadratic programming l1 trend filtering with R wrapper.
+Linear and quadratic programming l1 trend filtering with `R` wrapper.
 Supports observation weights and boundary conditions.
 
 ## Quick install
-Start R. Load devtools library. Then run:
+Start `R`. Load `devtools` library. Then run:
 ```{r}
 install_github("olofer/wl1tf")
 ```
@@ -11,7 +11,7 @@ install_github("olofer/wl1tf")
 ## Basic use-case
 Fits piecewise linear approximations to a batch of data with automatic break-points: `R` code: `examples-git/wl1tf-check.R`
 
-![Basic use-case solution compared to `glmgen::trendfilter`](/examples-git/wl1tf-check.png)
+![Basic use-case solution compared to `glmgen::trendfilter`](/examples-git/check-1.png)
 
 ## More examples
 Work required (and space) is linear in signal length: `R` code: `examples-git/wl1tf-speed.R`
