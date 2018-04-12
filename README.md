@@ -13,6 +13,8 @@ Fits piecewise linear approximations to a batch of data with automatic break-poi
 
 ![Basic use-case solution compared to `glmgen::trendfilter`](/examples-git/check-1.png)
 
+Basic use-case solution compared to `glmgen::trendfilter`.
+
 ## More examples
 Work required (and space) is linear in signal length: `R` code: `examples-git/wl1tf-speed.R`
 
