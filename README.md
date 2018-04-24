@@ -29,9 +29,13 @@ Basic trend filtering: `R` code: `examples-git/wl1tf-example.R`
 ![Basic trend filtering](/examples-git/example-1.png)
 
 ## Advanced example
-To be done.
+Piece-by-piece solution linked by LHS boundary condition/cost: `R` code: `examples-git/wl1tf-lhsbc.R`
 
-## Even more
+![Patched up solution](/examples-git/batch-1.png)
+
+The blue vertical dashed lines indicate the boundaries between batches. The solution is constructed from left to right. As soon as the next batch of data is acquired, the next short segment of the total solution is found by calling `wl21tf` with a left-hand-side boundary condition. This ensures that the total signal is "continuous".
+
+## Documentation
 Further see e.g.
 ```{r}
 library(wl1tf)
